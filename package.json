@@ -1,0 +1,16 @@
+{
+  "name": "my-electron-app",
+  "version": "1.0.0",
+  "description": "Hello World!",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Gustavo Minguta",
+  "dependencies": {
+    "electron": "^37.2.4",
+    "fs-extra": "^11.3.0",
+    "xlsx": "^0.18.5"
+  }
+}
