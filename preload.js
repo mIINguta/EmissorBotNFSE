@@ -48,9 +48,37 @@ console.log('[PRELOAD] carregado');
     executablePath: `C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe`,
     headless: false});
     const page = await browser.newPage();
-
+    
+    //abrindo navegador e definindo responsividade da tela.
     await page.goto('https://www.nfse.gov.br/EmissorNacional/Login?ReturnUrl=%2fEmissorNacional');
     await page.setViewport({width: 1366, height: 768});
+
+    //escolhendo seletores
+    await page.type("#Inscricao", result.cnpj);
+    await page.type("#Senha", result.senha);
+
+    // clicando botão entrar
+
+   
+    await page.locator(".btn-primary").click();
+
+    // esperando botão aparecer para clicar
+
+    const btnNovaNFSE = await page.waitForSelector('.btnAcesso');
+    
+    await btnNovaNFSE.click();
+    
+    //formatando data para NFSE
+    const hoje = new Date();
+    const dia = String(hoje.getDate()).padStart(2, '0');
+    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+    const ano = hoje.getFullYear();
+
+    const dataFormatada = `${dia}/${mes}/${ano}`;
+
+    //inserindo data na NFSE
+
+    await page.locator("#DataCompetencia").fill(dataFormatada);
 
   }
 
