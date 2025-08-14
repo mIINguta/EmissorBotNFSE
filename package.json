@@ -11,6 +11,7 @@
   "dependencies": {
     "electron": "^37.2.4",
     "fs-extra": "^11.3.0",
+    "puppeteer": "^24.16.2",
     "xlsx": "^0.18.5"
   }
 }

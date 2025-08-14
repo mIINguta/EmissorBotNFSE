@@ -6,10 +6,13 @@ window.addEventListener('DOMContentLoaded', () => {
   let listaEmitentes = [
     { nome: '', cnpj: '', cpf: '', senha: '' }
   ];
-
-  function TratamentoDadosRGX(){
-    
-  }
+  let dadosNFSE = [
+    {
+      cnpjDestinatario: '',
+      descricao: '',
+      valorTotal: ''
+    }
+  ]
 
   emitir.addEventListener("click", async () => {
     if (!window.excelControl) {
@@ -17,8 +20,6 @@ window.addEventListener('DOMContentLoaded', () => {
       return;
     }
     const data = await window.excelControl.lerLoginNFSE();
-  
-    console.log(data[0].nome);
 
     conteinerBot.innerHTML = `
       <section class="sec2">
@@ -35,16 +36,34 @@ window.addEventListener('DOMContentLoaded', () => {
     divEmitentes.innerHTML = `
       <select id="emitentes" name="emitentes">
         ${data.map(emitente => `
-          <option value="${emitente.nome}">${emitente.nome}</option>
+          <option id="nome-emitente" value="${emitente.nome}">${emitente.nome}</option>
         `).join('')}
       </select>
     `;
 
      setTimeout(() => {
       let textData = document.getElementById("text-data");
+      let btnEmitirNFSE = document.getElementById("enviardados-btn");
       if (textData) {
         textData.value = "CNPJ DESTINATARIO: \nDESCRICAO: \nVALOR TOTAL:";
-      }}, 0);
+      }
+      
+      btnEmitirNFSE.addEventListener('click', ()=>{
+          const texto = textData.value;
+          const linhas = texto.trim().split('\n');
+          const valores = linhas.map(linha => linha.match(/^.*?:\s*(.*)$/)[1]);
+          const emitentes = document.getElementById("emitentes").value;
+
+          dadosNFSE = [{
+            nomeEmitente: emitentes,
+            cnpjDestinatario: valores[0],
+            descricao: valores[1],
+            valorTotal: valores[2],
+      }]
+
+         window.excelControl.emitirNFSE(dadosNFSE);
+        })
+    }, 0);
 
   });
 
