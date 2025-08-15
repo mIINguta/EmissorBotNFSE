@@ -77,9 +77,33 @@ console.log('[PRELOAD] carregado');
     const dataFormatada = `${dia}/${mes}/${ano}`;
 
     //inserindo data na NFSE
-
     await page.locator("#DataCompetencia").fill(dataFormatada);
 
+    await page.keyboard.press("Tab");
+
+
+    // selecionando opção do destinatario
+    /* o que acontece aqui é que no HTML está com os inputs desabilitados, então tive que realizar uma manobra para habilitar via JS para clica-lo" */
+await page.evaluate(() => {
+  const input = document.querySelector('.radio-options .radiobutton.inline input[id="Tomador_LocalDomicilio"][value="1"]');
+  if (input) {
+    input.disabled = false;        // habilita
+    input.checked = true;          // marca
+    input.dispatchEvent(new Event('change', { bubbles: true })); // dispara evento
+  }
+});
+    // escrevendo CNPJ tomador
+    await page.locator("#Tomador_Inscricao").fill(result.cnpjDest);
+
+    // clicando tab
+    await page.keyboard.press("Tab");
+
+    // clicando botão avançar
+    await page.evaluate(() => {
+    const btn = document.getElementById('btnAvancar');
+    if (btn) btn.click();
+});
+    
   }
 
 contextBridge.exposeInMainWorld('excelControl', {
