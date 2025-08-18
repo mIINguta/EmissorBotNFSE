@@ -35,6 +35,23 @@ console.log('[PRELOAD] carregado');
   console.log("Ok!")
   }
 
+
+  // o que acontece aqui é que no HTML está com os inputs desabilitados, então tive que realizar uma manobra para habilitar via JS para clica-lo"
+  async function ativarBotao(_selector, page){
+  await page.evaluate((selector) => {
+        const input = document.querySelector(selector);
+        if (input) {
+        input.disabled = false;        // habilita
+        input.checked = true;          // marca
+        input.dispatchEvent(new Event('change', { bubbles: true })); // dispara evento
+      }
+    }, _selector);
+  };
+
+
+  async function ativarDropDown(_selector, page){
+    
+  }
   async function emitirNFSE(dados){
     // tratando dados.
     const data = await lerLoginNFSE();
@@ -58,14 +75,10 @@ console.log('[PRELOAD] carregado');
     await page.type("#Senha", result.senha);
 
     // clicando botão entrar
-
-   
     await page.locator(".btn-primary").click();
 
     // esperando botão aparecer para clicar
-
     const btnNovaNFSE = await page.waitForSelector('.btnAcesso');
-    
     await btnNovaNFSE.click();
     
     //formatando data para NFSE
@@ -76,35 +89,46 @@ console.log('[PRELOAD] carregado');
 
     const dataFormatada = `${dia}/${mes}/${ano}`;
 
-    //inserindo data na NFSE
+    //inserindo data na NFSE e pressionando o Tab
     await page.locator("#DataCompetencia").fill(dataFormatada);
-
     await page.keyboard.press("Tab");
-
 
     // selecionando opção do destinatario
-    /* o que acontece aqui é que no HTML está com os inputs desabilitados, então tive que realizar uma manobra para habilitar via JS para clica-lo" */
-await page.evaluate(() => {
-  const input = document.querySelector('.radio-options .radiobutton.inline input[id="Tomador_LocalDomicilio"][value="1"]');
-  if (input) {
-    input.disabled = false;        // habilita
-    input.checked = true;          // marca
-    input.dispatchEvent(new Event('change', { bubbles: true })); // dispara evento
-  }
-});
-    // escrevendo CNPJ tomador
-    await page.locator("#Tomador_Inscricao").fill(result.cnpjDest);
+    await ativarBotao('.radio-options .radiobutton.inline input[id="Tomador_LocalDomicilio"][value="1"]', page);
 
-    // clicando tab
+    // escrevendo CNPJ tomador e pressionando o tab
+    await page.locator("#Tomador_Inscricao").fill(result.cnpjDest);
     await page.keyboard.press("Tab");
 
-    // clicando botão avançar
-    await page.evaluate(() => {
+    
+  await page.waitForSelector('#btnAvancar');
+  // clicando botão avançar
+    page.evaluate(() => {
     const btn = document.getElementById('btnAvancar');
     if (btn) btn.click();
-});
+    });
+
+    await page.waitForSelector('#LocalPrestacao_CodigoMunicipioPrestacao + .select2');
+
+    // 1. Clica no select2 para abrir o dropdown do Local de Prestação
+    await page.click('#LocalPrestacao_CodigoMunicipioPrestacao + .select2'); 
+    // obs: normalmente o select2 gera um span logo após o select original
+
+    // 2. Aguarda o input de busca ficar disponível
+    await page.waitForSelector('.select2-search__field', { visible: true });
+
+    // 3. Digita o texto que você quer pesquisar
+    await page.type('.select2-search__field', 'Rio de Janeiro');
+
+    // 4. Aguarda a lista de resultados carregar
+    await page.waitForSelector('.select2-results__option', { visible: true });
+
+    // 5. Clica no primeiro resultado (ou no que você quiser)
+    //await page.click('.select2-results__option');
+
+    await page.keyboard.press("Tab");
     
-  }
+}
 
 contextBridge.exposeInMainWorld('excelControl', {
   lerLoginNFSE,
