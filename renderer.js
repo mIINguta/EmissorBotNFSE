@@ -4,11 +4,12 @@ window.addEventListener('DOMContentLoaded', () => {
   const conteinerBot = document.querySelector(".conteiner-bot");
 
   let listaEmitentes = [
-    { nome: '', cnpj: '', cpf: '', senha: '' }
+    { nome: '', cnpj: '', cpf: '', senha: '', cnpjDest: '', codServico: '', descricao: '' }
   ];
   let dadosNFSE = [
     {
       cnpjDestinatario: '',
+      codServico: '',
       descricao: '',
       valorTotal: ''
     }
@@ -57,8 +58,9 @@ window.addEventListener('DOMContentLoaded', () => {
           dadosNFSE = [{
             nomeEmitente: emitentes,
             cnpjDestinatario: valores[0],
-            descricao: valores[1],
-            valorTotal: valores[2],
+            codServico: valores[1],
+            descricao: valores[2],
+            valorTotal: valores[3],
       }]
 
          window.excelControl.emitirNFSE(dadosNFSE);
@@ -83,7 +85,7 @@ window.addEventListener('DOMContentLoaded', () => {
       let textData = document.getElementById("text-data");
       let btnCadastrarEmitente = document.getElementById("cadastrardados-btn");
       if (textData) {
-        textData.value = "CNPJ:\nEmitente:\nCPF:\nSenha: ";
+        textData.value = "CNPJ:\nEmitente:\nCPF:\nSenha:\nCNPJ Destinatario:\nCódigo de Serviço:\nDescrição:";
       }
       btnCadastrarEmitente.addEventListener('click', ()=>{
         const texto = textData.value;
@@ -96,7 +98,10 @@ window.addEventListener('DOMContentLoaded', () => {
           cnpj: valores[0],
           nome: valores[1],
           cpf: valores[2],
-          senha: valores[3]}];
+          senha: valores[3],
+          cnpjDest: valores[4],
+          codServico: valores[5],
+          descricao: valores[6]}];
 
         window.excelControl.cadastrarLoginNFSE(listaEmitentes[0]);
       })

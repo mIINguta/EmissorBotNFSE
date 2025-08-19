@@ -49,9 +49,28 @@ console.log('[PRELOAD] carregado');
   };
 
 
-  async function ativarDropDown(_selector, page){
+  async function ativarDropDown(selector, page, pesquisa){
     
-  }
+    await page.waitForSelector(`${selector} + .select2`);
+    // 1. Clica no select2 para abrir o dropdown do Local de Prestação
+    await page.click(`${selector} + .select2`); 
+    // obs: normalmente o select2 gera um span logo após o select original
+    // 2. Aguarda o input de busca ficar disponível
+    await page.waitForSelector('.select2-search__field', { visible: true });
+    if(pesquisa != '' || pesquisa != null){
+    // 3. Digita o texto que você quer pesquisar
+    await page.type('.select2-search__field', pesquisa);
+    // 4. Aguarda a lista de resultados carregar
+    await page.waitForSelector('.select2-results__option', { visible: true });
+      // como estamos buscando o primeiro resultado e o primeiro que aparece é Buscando, temos que colocar esse wait para esperar a atualização.
+    await page.waitForFunction(() => {
+      const options = [...document.querySelectorAll('.select2-results__option')];
+      return options.some(opt => opt.textContent.trim() !== 'Buscando...');
+    });
+    // 5. Clica no primeiro resultado (ou no que você quiser)
+    await page.click('.select2-results__option');
+  }}
+
   async function emitirNFSE(dados){
     // tratando dados.
     const data = await lerLoginNFSE();
@@ -59,12 +78,13 @@ console.log('[PRELOAD] carregado');
     console.log(result);
 
     //iniciando navegador com puppeter
-
     const browser = await puppeteer.launch({
 
     executablePath: `C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe`,
     headless: false});
     const page = await browser.newPage();
+      // 
+    page.setDefaultTimeout(60000);
     
     //abrindo navegador e definindo responsividade da tela.
     await page.goto('https://www.nfse.gov.br/EmissorNacional/Login?ReturnUrl=%2fEmissorNacional');
@@ -99,34 +119,31 @@ console.log('[PRELOAD] carregado');
     // escrevendo CNPJ tomador e pressionando o tab
     await page.locator("#Tomador_Inscricao").fill(result.cnpjDest);
     await page.keyboard.press("Tab");
+    //esperar o botão
+    await page.waitForSelector('#btnAvancar');
 
-    
-  await page.waitForSelector('#btnAvancar');
-  // clicando botão avançar
+    // clicando botão avançar
     page.evaluate(() => {
-    const btn = document.getElementById('btnAvancar');
-    if (btn) btn.click();
-    });
+      /* setTimeout dentro do evaluate porque ele funciona dentro do browser. se colocarmos do lado de fora, o timeout funciona no Node.Js, fznd o puppeteer pular */
+      setTimeout(()=> {
+      const btn = document.getElementById('btnAvancar');
+      if (btn) btn.click();
+    }, 2000)})
 
-    await page.waitForSelector('#LocalPrestacao_CodigoMunicipioPrestacao + .select2');
+    //inserindo município
+    await ativarDropDown('#LocalPrestacao_CodigoMunicipioPrestacao', page, "Rio de Janeiro");
+    // inserindo codigo do servico
+    await ativarDropDown('#ServicoPrestado_CodigoTributacaoNacional', page, result.codServico);
 
-    // 1. Clica no select2 para abrir o dropdown do Local de Prestação
-    await page.click('#LocalPrestacao_CodigoMunicipioPrestacao + .select2'); 
-    // obs: normalmente o select2 gera um span logo após o select original
+    // escolhendo a opção NÂO
+    await ativarBotao('#ServicoPrestado_HaExportacaoImunidadeNaoIncidencia', page)
+    
+    // escrevendo descrição
+    await page.waitForSelector("#ServicoPrestado_Descricao");
+    await page.type("#ServicoPrestado_Descricao", result.descricao != '' ? result.descricao : dados.descricao);
 
-    // 2. Aguarda o input de busca ficar disponível
-    await page.waitForSelector('.select2-search__field', { visible: true });
+   
 
-    // 3. Digita o texto que você quer pesquisar
-    await page.type('.select2-search__field', 'Rio de Janeiro');
-
-    // 4. Aguarda a lista de resultados carregar
-    await page.waitForSelector('.select2-results__option', { visible: true });
-
-    // 5. Clica no primeiro resultado (ou no que você quiser)
-    //await page.click('.select2-results__option');
-
-    await page.keyboard.press("Tab");
     
 }
 
