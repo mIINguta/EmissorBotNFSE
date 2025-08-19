@@ -152,7 +152,7 @@ console.log('[PRELOAD] carregado');
 
     // avançando para confirmar dados
     botaoAvancar(page);
-
+    
     // confirmando emissaoNFSE
     //await page.waitForSelector("#btnProsseguir");
     //await page.locator("#btnProsseguir").click();
