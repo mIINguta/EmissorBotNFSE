@@ -17,7 +17,7 @@ console.log('[PRELOAD] carregado');
     return data;
   }
 
-    async function  cadastrarLoginNFSE(emitente){
+    async function cadastrarLoginNFSE(emitente){
     const fileBuffer = await fs.readFile('G:\\Meu Drive\\PLANILHAS_ACESSO\\DADOS_LOGIN.xlsx');
     const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
     const workSheet = workbook.Sheets["LOGIN_NFSE_GOV"];
@@ -32,10 +32,8 @@ console.log('[PRELOAD] carregado');
 
   XLSX.writeFile(workbook,'G:\\Meu Drive\\PLANILHAS_ACESSO\\DADOS_LOGIN.xlsx');
 
-  console.log("Ok!")
+  return true;  
   }
-
-
   // o que acontece aqui é que no HTML está com os inputs desabilitados, então tive que realizar uma manobra para habilitar via JS para clica-lo"
   async function ativarBotao(_selector, page){
   await page.evaluate((selector) => {
@@ -47,10 +45,7 @@ console.log('[PRELOAD] carregado');
       }
     }, _selector);
   };
-
-
   async function ativarDropDown(selector, page, pesquisa){
-    
     await page.waitForSelector(`${selector} + .select2`);
     // 1. Clica no select2 para abrir o dropdown do Local de Prestação
     await page.click(`${selector} + .select2`); 
@@ -70,11 +65,15 @@ console.log('[PRELOAD] carregado');
     // 5. Clica no primeiro resultado (ou no que você quiser)
     await page.click('.select2-results__option');
   }}
-
+  async function botaoAvancar(page){
+    page.evaluate(async () =>{
+      const avancarBtn = document.querySelector('body > div.container.container-body > form > div.comandos > button');
+      await avancarBtn.click();
+    })};
   async function emitirNFSE(dados){
     // tratando dados.
     const data = await lerLoginNFSE();
-    const result = await data.find(linha =>  linha.nome.trim() === dados[0].nomeEmitente.trim());
+    const result = await data.find(linha =>  linha.nome.trim() === dados.nomeEmitente.trim());
     console.log(result);
 
     //iniciando navegador com puppeter
@@ -110,6 +109,7 @@ console.log('[PRELOAD] carregado');
     const dataFormatada = `${dia}/${mes}/${ano}`;
 
     //inserindo data na NFSE e pressionando o Tab
+    await page.waitForSelector('#DataCompetencia');
     await page.locator("#DataCompetencia").fill(dataFormatada);
     await page.keyboard.press("Tab");
 
@@ -140,16 +140,25 @@ console.log('[PRELOAD] carregado');
     
     // escrevendo descrição
     await page.waitForSelector("#ServicoPrestado_Descricao");
-    await page.type("#ServicoPrestado_Descricao", result.descricao != '' ? result.descricao : dados.descricao);
+    await page.type("#ServicoPrestado_Descricao", dados.descricao.toString() != '' ? dados.descricao.toString() : result.descricao);
 
-   
 
-    
+    //clicando botão Avançar *escrevi uma função para não duplicar código*
+    botaoAvancar(page);
+    // inserindo valor total da NFSE
+
+    await page.waitForSelector('#Valores_ValorServico');
+    await page.locator('#Valores_ValorServico').fill(dados.valorTotal.toString());
+
+    // avançando para confirmar dados
+    botaoAvancar(page);
+
+    // confirmando emissaoNFSE
+    //await page.waitForSelector("#btnProsseguir");
+    //await page.locator("#btnProsseguir").click();
 }
-
 contextBridge.exposeInMainWorld('excelControl', {
   lerLoginNFSE,
   cadastrarLoginNFSE,
   emitirNFSE
-
 });

@@ -30,6 +30,7 @@ window.addEventListener('DOMContentLoaded', () => {
           <textarea name="dados-cadastro" id="text-data" class="text-data"></textarea>
         </div>
         <button id="enviardados-btn" class="btn">Enviar</button>
+        <button id="voltar-btn" class="btn">Voltar</button>
       </section>
     `;
 
@@ -45,6 +46,7 @@ window.addEventListener('DOMContentLoaded', () => {
      setTimeout(() => {
       let textData = document.getElementById("text-data");
       let btnEmitirNFSE = document.getElementById("enviardados-btn");
+      let voltarBtn = document.getElementById("voltar-btn");
       if (textData) {
         textData.value = "CNPJ DESTINATARIO: \nDESCRICAO: \nVALOR TOTAL:";
       }
@@ -58,14 +60,16 @@ window.addEventListener('DOMContentLoaded', () => {
           dadosNFSE = [{
             nomeEmitente: emitentes,
             cnpjDestinatario: valores[0],
-            codServico: valores[1],
-            descricao: valores[2],
-            valorTotal: valores[3],
+            descricao: valores[1],
+            valorTotal: valores[2],
       }]
 
-         window.excelControl.emitirNFSE(dadosNFSE);
+        window.excelControl.emitirNFSE(dadosNFSE[0]);
         })
+
+      voltarBtn.addEventListener('click', () => window.location.reload());
     }, 0);
+      
 
   });
 
@@ -77,6 +81,7 @@ window.addEventListener('DOMContentLoaded', () => {
           <textarea name="dados-cadastro" id="text-data" class="text-data"></textarea>
         </div>
         <button id="cadastrardados-btn" class="btn">Enviar</button>
+        <button id="voltar-btn" class="btn">Voltar</button>
       </section>
     `;
 
@@ -84,6 +89,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       let textData = document.getElementById("text-data");
       let btnCadastrarEmitente = document.getElementById("cadastrardados-btn");
+      let voltarBtn = document.getElementById("voltar-btn");
       if (textData) {
         textData.value = "CNPJ:\nEmitente:\nCPF:\nSenha:\nCNPJ Destinatario:\nCódigo de Serviço:\nDescrição:\nLocal Serviço:";
       }
@@ -104,8 +110,15 @@ window.addEventListener('DOMContentLoaded', () => {
           descricao: valores[6],
           localServico: valores[7]}];
 
-        window.excelControl.cadastrarLoginNFSE(listaEmitentes[0]);
-      })
+        var result = window.excelControl.cadastrarLoginNFSE(listaEmitentes[0]);
+        if(result){
+          window.alert("Os dados foram salvos!")
+          window.location.reload();
+        }else
+          window.alert("Algo de errado aconteceu!");
+        })
+
+      voltarBtn.addEventListener('click', () => window.location.reload());
     }, 0);
   });  
 });  
