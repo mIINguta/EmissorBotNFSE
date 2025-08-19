@@ -8,7 +8,7 @@ window.addEventListener('DOMContentLoaded', () => {
   ];
   let dadosNFSE = [
     {
-      cnpjDestinatario: '',
+      cnpjDest: '',
       codServico: '',
       descricao: '',
       valorTotal: ''
@@ -21,6 +21,7 @@ window.addEventListener('DOMContentLoaded', () => {
       return;
     }
     const data = await window.excelControl.lerLoginNFSE();
+    console.log(data);
 
     conteinerBot.innerHTML = `
       <section class="sec2">
@@ -47,10 +48,20 @@ window.addEventListener('DOMContentLoaded', () => {
       let textData = document.getElementById("text-data");
       let btnEmitirNFSE = document.getElementById("enviardados-btn");
       let voltarBtn = document.getElementById("voltar-btn");
-      if (textData) {
-        textData.value = "CNPJ DESTINATARIO: \nDESCRICAO: \nVALOR TOTAL:";
+      let selectEmitentes = document.getElementById("emitentes");
+
+      // criei uma lógica para mostrar quais dados ja temos para a emissão da NFSE com base no cadastro do login
+      if (textData && data.length > 0) {
+      let emitente = data[0];
+      textData.value = `CNPJ DESTINATARIO: ${emitente.cnpjDest}\nDESCRICAO: ${emitente.descricao}\nVALOR TOTAL:\nCÓDIGO DE SERVIÇO: ${emitente.codServico}`;}
+      // Atualiza quando mudar o select
+      selectEmitentes.addEventListener("change", () => {
+      let emitenteSelecionado = data.find(e => e.nome === selectEmitentes.value);
+      if (emitenteSelecionado) {
+        textData.value = `CNPJ DESTINATARIO: ${emitenteSelecionado.cnpjDest}\nDESCRICAO: ${emitenteSelecionado.descricao}\nVALOR TOTAL:\nCÓDIGO DE SERVIÇO: ${emitenteSelecionado.codServico}`;
       }
-      
+    }); 
+
       btnEmitirNFSE.addEventListener('click', ()=>{
           const texto = textData.value;
           const linhas = texto.trim().split('\n');
@@ -59,9 +70,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
           dadosNFSE = [{
             nomeEmitente: emitentes,
-            cnpjDestinatario: valores[0],
+            cnpjDest: valores[0],
             descricao: valores[1],
             valorTotal: valores[2],
+            codServico: valores[3]
       }]
 
         window.excelControl.emitirNFSE(dadosNFSE[0]);

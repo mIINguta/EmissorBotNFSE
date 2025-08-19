@@ -117,7 +117,7 @@ console.log('[PRELOAD] carregado');
     await ativarBotao('.radio-options .radiobutton.inline input[id="Tomador_LocalDomicilio"][value="1"]', page);
 
     // escrevendo CNPJ tomador e pressionando o tab
-    await page.locator("#Tomador_Inscricao").fill(result.cnpjDest);
+    await page.locator("#Tomador_Inscricao").fill(dados.cnpjDest.toString() != '' ? dados.cnpjDest.toString() :result.cnpjDest);
     await page.keyboard.press("Tab");
     //esperar o botão
     await page.waitForSelector('#btnAvancar');
@@ -131,9 +131,9 @@ console.log('[PRELOAD] carregado');
     }, 2000)})
 
     //inserindo município
-    await ativarDropDown('#LocalPrestacao_CodigoMunicipioPrestacao', page, "Rio de Janeiro");
+    await ativarDropDown('#LocalPrestacao_CodigoMunicipioPrestacao', page, result.localServico)
     // inserindo codigo do servico
-    await ativarDropDown('#ServicoPrestado_CodigoTributacaoNacional', page, result.codServico);
+    await ativarDropDown('#ServicoPrestado_CodigoTributacaoNacional', page,  dados.codServico.toString() != '' ? dados.codServico.toString() : result.codServico );
 
     // escolhendo a opção NÂO
     await ativarBotao('#ServicoPrestado_HaExportacaoImunidadeNaoIncidencia', page)
