@@ -30,7 +30,7 @@ console.log('[PRELOAD] carregado');
   const dadosAtualizados = XLSX.utils.json_to_sheet(data);
   workbook.Sheets["LOGIN_NFSE_GOV"] = dadosAtualizados;
 
-  XLSX.writeFile(workbook,'G:\\Meu Drive\\PLANILHAS_ACESSO\\DADOS_LOGIN.xlsx');
+  await XLSX.writeFile(workbook,'G:\\Meu Drive\\PLANILHAS_ACESSO\\DADOS_LOGIN.xlsx');
 
   return true;  
   }

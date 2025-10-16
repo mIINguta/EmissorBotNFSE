@@ -105,7 +105,7 @@ window.addEventListener('DOMContentLoaded', () => {
       if (textData) {
         textData.value = "CNPJ:\nEmitente:\nCPF:\nSenha:\nCNPJ Destinatario:\nCódigo de Serviço:\nDescrição:\nLocal Serviço:";
       }
-      btnCadastrarEmitente.addEventListener('click', ()=>{
+      btnCadastrarEmitente.addEventListener('click', async ()=>{
         const texto = textData.value;
         const linhas = texto.trim().split('\n');
         const valores = linhas.map(linha => linha.match(/^.*?:\s*(.*)$/)[1]);
@@ -122,9 +122,10 @@ window.addEventListener('DOMContentLoaded', () => {
           descricao: valores[6],
           localServico: valores[7]}];
 
-        var result = window.excelControl.cadastrarLoginNFSE(listaEmitentes[0]);
+        var result = await window.excelControl.cadastrarLoginNFSE(listaEmitentes[0]);
         if(result){
-          window.alert("Os dados foram salvos!")
+          window.alert("Os dados foram salvos!");
+          console.log(result);
           window.location.reload();
         }else
           window.alert("Algo de errado aconteceu!");
