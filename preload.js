@@ -55,33 +55,40 @@ console.log('[PRELOAD] carregado');
     await page.waitForSelector('.select2-search__field', { visible: true });
     if(pesquisa != '' || pesquisa != null){
     // 3. Digita o texto que você quer pesquisar
+    if(isCode){
     await page.type('.select2-search__field', pesquisa);
+    await AguardarLista();
+    // 5. Clica no primeiro resultado (ou no que você quiser)
+    await page.click('.select2-results__option');
+    }
+    else{ 
+      if(pesquisa === "São Paulo/SP"){
+              await page.type('.select2-search__field', "São Paulo");
+              await AguardarLista();
+
+              for(i=0; i<3; i++){
+              await page.keyboard.press("ArrowDown");
+              }
+              await page.keyboard.press("Enter");
+            }
+      else if(pesquisa === "Guaxupé/MG"){
+        await page.type('.select2-search__field', "Guaxupé");
+          await AguardarLista();
+          await page.keyboard.press("Enter");
+      }
+    }
+    
+
+    async function AguardarLista(){
     // 4. Aguarda a lista de resultados carregar
     await page.waitForSelector('.select2-results__option', { visible: true });
       // como estamos buscando o primeiro resultado e o primeiro que aparece é Buscando, temos que colocar esse wait para esperar a atualização.
     await page.waitForFunction(() => {
       const options = [...document.querySelectorAll('.select2-results__option')];
       return options.some(opt => opt.textContent.trim() !== 'Buscando...');
-    });
-    if(isCode){
-       // 5. Clica no primeiro resultado (ou no que você quiser)
-     // await page.click('.select2-results__option');
-    }
-    else{
-      await page.evaluate(() => {
-      const options = document.querySelectorAll('.select2-results__option');
-        // Itera sobre cada resultado
-        options.forEach(option => {
-            // Compara o valor (texto) de cada <li>
-            if (option.textContent.trim() === "São Paulo/SP") {
-                // Clica no elemento correto - este clique é no contexto do navegador
-                option.click(option);
-            }
-        });
-    });
-  }
-}
-}
+    }); 
+  }}}
+
   async function botaoAvancar(page){
     page.evaluate(async () =>{
       const avancarBtn = document.querySelector('body > div.container.container-body > form > div.comandos > button');
