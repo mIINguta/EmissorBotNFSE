@@ -45,7 +45,8 @@ console.log('[PRELOAD] carregado');
       }
     }, _selector);
   };
-  async function ativarDropDown(selector, page, pesquisa){
+  async function ativarDropDown(selector, page, pesquisa, isCode){
+
     await page.waitForSelector(`${selector} + .select2`);
     // 1. Clica no select2 para abrir o dropdown do Local de Prestação
     await page.click(`${selector} + .select2`); 
@@ -62,9 +63,25 @@ console.log('[PRELOAD] carregado');
       const options = [...document.querySelectorAll('.select2-results__option')];
       return options.some(opt => opt.textContent.trim() !== 'Buscando...');
     });
-    // 5. Clica no primeiro resultado (ou no que você quiser)
-    await page.click('.select2-results__option');
-  }}
+    if(isCode){
+       // 5. Clica no primeiro resultado (ou no que você quiser)
+     // await page.click('.select2-results__option');
+    }
+    else{
+      await page.evaluate(() => {
+      const options = document.querySelectorAll('.select2-results__option');
+        // Itera sobre cada resultado
+        options.forEach(option => {
+            // Compara o valor (texto) de cada <li>
+            if (option.textContent.trim() === "São Paulo/SP") {
+                // Clica no elemento correto - este clique é no contexto do navegador
+                option.click(option);
+            }
+        });
+    });
+  }
+}
+}
   async function botaoAvancar(page){
     page.evaluate(async () =>{
       const avancarBtn = document.querySelector('body > div.container.container-body > form > div.comandos > button');
@@ -131,27 +148,27 @@ console.log('[PRELOAD] carregado');
     }, 2000)})
 
     //inserindo município
-    await ativarDropDown('#LocalPrestacao_CodigoMunicipioPrestacao', page, result.localServico)
+    await ativarDropDown('#LocalPrestacao_CodigoMunicipioPrestacao', page, result.localServico,false);
     // inserindo codigo do servico
-    await ativarDropDown('#ServicoPrestado_CodigoTributacaoNacional', page,  dados.codServico.toString() != '' ? dados.codServico.toString() : result.codServico );
+    await ativarDropDown('#ServicoPrestado_CodigoTributacaoNacional', page,  dados.codServico.toString() != '' ? dados.codServico.toString() : result.codServico, true );
 
     // escolhendo a opção NÂO
-    await ativarBotao('#ServicoPrestado_HaExportacaoImunidadeNaoIncidencia', page)
+    // await ativarBotao('#ServicoPrestado_HaExportacaoImunidadeNaoIncidencia', page)
     
-    // escrevendo descrição
-    await page.waitForSelector("#ServicoPrestado_Descricao");
-    await page.type("#ServicoPrestado_Descricao", dados.descricao.toString() != '' ? dados.descricao.toString() : result.descricao);
+    // // escrevendo descrição
+    // await page.waitForSelector("#ServicoPrestado_Descricao");
+    // await page.type("#ServicoPrestado_Descricao", dados.descricao.toString() != '' ? dados.descricao.toString() : result.descricao);
 
 
-    //clicando botão Avançar *escrevi uma função para não duplicar código*
-    botaoAvancar(page);
-    // inserindo valor total da NFSE
+    // //clicando botão Avançar *escrevi uma função para não duplicar código*
+    // botaoAvancar(page);
+    // // inserindo valor total da NFSE
 
-    await page.waitForSelector('#Valores_ValorServico');
-    await page.locator('#Valores_ValorServico').fill(dados.valorTotal.toString());
+    // await page.waitForSelector('#Valores_ValorServico');
+    // await page.locator('#Valores_ValorServico').fill(dados.valorTotal.toString());
 
-    // avançando para confirmar dados
-    botaoAvancar(page);
+    // // avançando para confirmar dados
+    // botaoAvancar(page);
 
     // confirmando emissaoNFSE
     //await page.waitForSelector("#btnProsseguir");

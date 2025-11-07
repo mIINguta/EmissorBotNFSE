@@ -58,7 +58,7 @@ window.addEventListener('DOMContentLoaded', () => {
       selectEmitentes.addEventListener("change", () => {
       let emitenteSelecionado = data.find(e => e.nome === selectEmitentes.value);
       if (emitenteSelecionado) {
-        textData.value = `CNPJ DESTINATARIO: ${emitenteSelecionado.cnpjDest}\nDESCRICAO: ${emitenteSelecionado.descricao}\nVALOR TOTAL:\nCÓDIGO DE SERVIÇO: ${emitenteSelecionado.codServico}`;
+        textData.value = `CNPJ DESTINATARIO: ${emitenteSelecionado.cnpjDest}\nLOCAL DO SERVIÇO: ${emitenteSelecionado.localServico}\nDESCRICAO: ${emitenteSelecionado.descricao}\nVALOR TOTAL:\nCÓDIGO DE SERVIÇO: ${emitenteSelecionado.codServico}`;
       }
     }); 
 
@@ -71,9 +71,10 @@ window.addEventListener('DOMContentLoaded', () => {
           dadosNFSE = [{
             nomeEmitente: emitentes,
             cnpjDest: valores[0],
-            descricao: valores[1],
-            valorTotal: valores[2],
-            codServico: valores[3]
+            localServico: valores[1],
+            descricao: valores[2],
+            valorTotal: valores[3],
+            codServico: valores[4]
       }]
 
         window.excelControl.emitirNFSE(dadosNFSE[0]);
