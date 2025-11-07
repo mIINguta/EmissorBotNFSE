@@ -76,6 +76,12 @@ console.log('[PRELOAD] carregado');
           await AguardarLista();
           await page.keyboard.press("Enter");
       }
+      else{
+        await page.type('.select2-search__field', pesquisa);
+        await AguardarLista();
+        // 5. Clica no primeiro resultado (ou no que você quiser)
+        await page.click('.select2-results__option');
+      }
     }
     
 
@@ -160,26 +166,26 @@ console.log('[PRELOAD] carregado');
     await ativarDropDown('#ServicoPrestado_CodigoTributacaoNacional', page,  dados.codServico.toString() != '' ? dados.codServico.toString() : result.codServico, true );
 
     // escolhendo a opção NÂO
-    // await ativarBotao('#ServicoPrestado_HaExportacaoImunidadeNaoIncidencia', page)
+    await ativarBotao('#ServicoPrestado_HaExportacaoImunidadeNaoIncidencia', page)
     
-    // // escrevendo descrição
-    // await page.waitForSelector("#ServicoPrestado_Descricao");
-    // await page.type("#ServicoPrestado_Descricao", dados.descricao.toString() != '' ? dados.descricao.toString() : result.descricao);
+    // escrevendo descrição
+    await page.waitForSelector("#ServicoPrestado_Descricao");
+    await page.type("#ServicoPrestado_Descricao", dados.descricao.toString() != '' ? dados.descricao.toString() : result.descricao);
 
 
-    // //clicando botão Avançar *escrevi uma função para não duplicar código*
-    // botaoAvancar(page);
-    // // inserindo valor total da NFSE
+    //clicando botão Avançar *escrevi uma função para não duplicar código*
+    botaoAvancar(page);
 
-    // await page.waitForSelector('#Valores_ValorServico');
-    // await page.locator('#Valores_ValorServico').fill(dados.valorTotal.toString());
+    // inserindo valor total da NFSE
+    await page.waitForSelector('#Valores_ValorServico');
+    await page.locator('#Valores_ValorServico').fill(dados.valorTotal.toString());
 
-    // // avançando para confirmar dados
-    // botaoAvancar(page);
+    // avançando para confirmar dados
+    botaoAvancar(page);
 
     // confirmando emissaoNFSE
-    //await page.waitForSelector("#btnProsseguir");
-    //await page.locator("#btnProsseguir").click();
+    // await page.waitForSelector("#btnProsseguir");
+    // await page.locator("#btnProsseguir").click();
 }
 contextBridge.exposeInMainWorld('excelControl', {
   lerLoginNFSE,

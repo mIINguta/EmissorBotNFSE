@@ -1,7 +1,7 @@
 {
-  "name": "my-electron-app",
+  "name": "EmissorBot NFSE MEI",
   "version": "1.0.0",
-  "description": "Hello World!",
+  "description": "Emissor de Nota Fiscal de Serviço",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
