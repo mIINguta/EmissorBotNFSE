@@ -83,7 +83,7 @@ console.log('[PRELOAD] carregado');
         await page.click('.select2-results__option');
       }
     }
-    
+
 
     async function AguardarLista(){
     // 4. Aguarda a lista de resultados carregar
@@ -166,12 +166,25 @@ console.log('[PRELOAD] carregado');
     await ativarDropDown('#ServicoPrestado_CodigoTributacaoNacional', page,  dados.codServico.toString() != '' ? dados.codServico.toString() : result.codServico, true );
 
     // escolhendo a opção NÂO
-    await ativarBotao('#ServicoPrestado_HaExportacaoImunidadeNaoIncidencia', page)
+    await ativarBotao('#ServicoPrestado_HaExportacaoImunidadeNaoIncidencia', page);
     
     // escrevendo descrição
     await page.waitForSelector("#ServicoPrestado_Descricao");
     await page.type("#ServicoPrestado_Descricao", dados.descricao.toString() != '' ? dados.descricao.toString() : result.descricao);
 
+    //condicional para códigos de COI
+    if(dados.codServico == "070201")
+    {
+      await page.waitForSelector(`.radiobutton label input[type="radio"]`);
+      await page.evaluate(()=>{
+        const el = document.querySelector("#Obra_TipoInformacao");
+        el.style.display = "block";
+        el.click();
+      })
+      await page.locator('label:has(input[name="Obra.TipoInformacao"][value="1"])')
+      await page.click('label:has(input[name="Obra.TipoInformacao"][value="1"])');
+      await page.locator('#Obra_CodigoObra').fill("COI");
+    }
 
     //clicando botão Avançar *escrevi uma função para não duplicar código*
     botaoAvancar(page);
