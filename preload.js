@@ -47,7 +47,7 @@ console.log('[PRELOAD] carregado');
   };
   async function ativarDropDown(selector, page, pesquisa, isCode){
 
-    await page.waitForSelector(`${selector} + .select2`);
+    await page.waitForSelector(`${selector} + .select2`, );
     // 1. Clica no select2 para abrir o dropdown do Local de Prestação
     await page.click(`${selector} + .select2`); 
     // obs: normalmente o select2 gera um span logo após o select original
@@ -163,7 +163,21 @@ console.log('[PRELOAD] carregado');
     //inserindo município
     await ativarDropDown('#LocalPrestacao_CodigoMunicipioPrestacao', page, result.localServico,false);
     // inserindo codigo do servico
-    await ativarDropDown('#ServicoPrestado_CodigoTributacaoNacional', page,  dados.codServico.toString() != '' ? dados.codServico.toString() : result.codServico, true );
+    await ativarDropDown('#ServicoPrestado_CodigoTributacaoNacional', page,  dados.codServicoNac.toString() != '' ? dados.codServicoNac.toString() : result.codServicoNac, true );
+
+    // conferindo se existe codservicoNac
+    if(dados.codServicoMun.toString()){
+      await page.waitForSelector('#ServicoPrestado_CodigoComplementarMunicipal');
+      await page.evaluate((codigoTexto) => {
+      const select = document.querySelector('#ServicoPrestado_CodigoComplementarMunicipal');
+      const option = [...select.options].find(opt =>
+    opt.text.includes(codigoTexto)
+  );
+      if (!option) return;
+      select.value = option.value;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+}, dados.codServicoMun.toString());
+    }
 
     // escolhendo a opção NÂO
     await ativarBotao('#ServicoPrestado_HaExportacaoImunidadeNaoIncidencia', page);
@@ -171,6 +185,10 @@ console.log('[PRELOAD] carregado');
     // escrevendo descrição
     await page.waitForSelector("#ServicoPrestado_Descricao");
     await page.type("#ServicoPrestado_Descricao", dados.descricao.toString() != '' ? dados.descricao.toString() : result.descricao);
+
+    
+   
+
 
     //condicional para códigos de COI
     if(dados.codServico == "070201")

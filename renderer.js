@@ -58,7 +58,7 @@ window.addEventListener('DOMContentLoaded', () => {
       selectEmitentes.addEventListener("change", () => {
       let emitenteSelecionado = data.find(e => e.nome === selectEmitentes.value);
       if (emitenteSelecionado) {
-        textData.value = `CNPJ DESTINATARIO: ${emitenteSelecionado.cnpjDest}\nLOCAL DO SERVIÇO: ${emitenteSelecionado.localServico}\nDESCRICAO: ${emitenteSelecionado.descricao}\nVALOR TOTAL:\nCÓDIGO DE SERVIÇO: ${emitenteSelecionado.codServico}`;
+        textData.value = `CNPJ DESTINATARIO: ${emitenteSelecionado.cnpjDest}\nLOCAL DO SERVIÇO: ${emitenteSelecionado.localServico}\nDESCRICAO: ${emitenteSelecionado.descricao}\nVALOR TOTAL:\nCÓDIGO DE SERVIÇO NACIONAL: ${emitenteSelecionado.codServicoNac}\nCÓDIGO DE SERVIÇO MUNICIPAL: ${emitenteSelecionado.codServicoMun}`;
       }
     }); 
 
@@ -74,7 +74,8 @@ window.addEventListener('DOMContentLoaded', () => {
             localServico: valores[1],
             descricao: valores[2],
             valorTotal: valores[3],
-            codServico: valores[4]
+            codServicoNac: valores[4],
+            codServicoMun: valores[5]
       }]
 
         window.excelControl.emitirNFSE(dadosNFSE[0]);
@@ -104,7 +105,7 @@ window.addEventListener('DOMContentLoaded', () => {
       let btnCadastrarEmitente = document.getElementById("cadastrardados-btn");
       let voltarBtn = document.getElementById("voltar-btn");
       if (textData) {
-        textData.value = "CNPJ:\nEmitente:\nCPF:\nSenha:\nCNPJ Destinatario:\nCódigo de Serviço:\nDescrição:\nLocal Serviço:";
+        textData.value = "CNPJ:\nEmitente:\nCPF:\nSenha:\nCNPJ Destinatario:\nCódigo de Serviço Nacional:\nCódigo de Serviço Municipal:\nDescrição:\nLocal Serviço:";
       }
       btnCadastrarEmitente.addEventListener('click', async ()=>{
         const texto = textData.value;
@@ -119,9 +120,11 @@ window.addEventListener('DOMContentLoaded', () => {
           cpf: valores[2],
           senha: valores[3],
           cnpjDest: valores[4],
-          codServico: valores[5],
-          descricao: valores[6],
-          localServico: valores[7]}];
+          codServicoNac: valores[5],
+          codServicoMun: valores[6],
+          descricao: valores[7],
+          localServico: valores[8],
+        }];
 
         var result = await window.excelControl.cadastrarLoginNFSE(listaEmitentes[0]);
         if(result){
