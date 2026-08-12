@@ -4,16 +4,27 @@ window.addEventListener('DOMContentLoaded', () => {
   const conteinerBot = document.querySelector(".conteiner-bot");
 
   let listaEmitentes = [
-    { nome: '', cnpj: '', cpf: '', senha: '', cnpjDest: '', codServico: '', descricao: '', localServico: '' }
+    { nome: '', cnpj: '', cpf: '', senha: '', cnpjDest: '', codServico: '', descricao: '', localServico: '', regimeApuracao: '', NBS: '', CIO: '', IBS: '', CBS: '',destinatarioAdquirente: '', compraGovernamental: ''}
   ];
   let dadosNFSE = [
     {
       cnpjDest: '',
       codServico: '',
       descricao: '',
-      valorTotal: ''
+      valorTotal: '',
+      regimeApuracao: '',
+      NBS: '',
+      CIO: '',
+      destinatarioAdquirente: '',
+      compraGovernamental: '',
+      IBSeCBS: false,
+      IBS: '',
+      CBS: '',
     }
   ]
+  let IBSeCBS = false;
+  let IBS = "";
+  let CBS = "";
 
   emitir.addEventListener("click", async () => {
     if (!window.excelControl) {
@@ -24,15 +35,21 @@ window.addEventListener('DOMContentLoaded', () => {
     console.log(data);
 
     conteinerBot.innerHTML = `
+    <h1> Dados de Emissão para NFSE</h1>
       <section class="sec2">
-        <h1> Dados de Emissão para NFSE</h1>
-        <div class="div-select-emitentes"></div>
-        <div class="div-dados-emissao">
-          <textarea name="dados-cadastro" id="text-data" class="text-data"></textarea>
-        </div>
+          <section class="sec-dados-nota">
+            <div class="div-select-emitentes"> </div>
+            <div class="div-dados-emissao">
+            <textarea name="dados-cadastro" id="text-data" class="text-data"></textarea></div>
+          </section>
+          <section class="sec-dados-imp">
+          <div>
+          <p> Preencher Dados de IBS e CBS?  <input class="check-ibs-cbs" type="checkbox" value="yes"/></p>
+           <div class="div-dados-ibs"></div>
+          </section>
+      </section>
         <button id="enviardados-btn" class="btn">Enviar</button>
         <button id="voltar-btn" class="btn">Voltar</button>
-      </section>
     `;
 
     const divEmitentes = document.querySelector(".div-select-emitentes");
@@ -44,7 +61,26 @@ window.addEventListener('DOMContentLoaded', () => {
       </select>
     `;
 
-     setTimeout(() => {
+    const CheckIBSeCBS = document.querySelector(".check-ibs-cbs");
+    const divIBSeCBS = document.querySelector(".div-dados-ibs");
+
+     CheckIBSeCBS.addEventListener('change', function (){
+      if(CheckIBSeCBS.checked){
+        IBSeCBS = true;
+            divIBSeCBS.innerHTML = `
+              <h2> Alíquotas </h2>
+                <p>IBS</p><input class="input-ibs" type="text"></input> 
+                <p>CBS</p> <input class="input-cbs" type="text"></input> 
+              `;
+      }else {
+        IBSeCBS = false;
+        divIBSeCBS.innerHTML = '';
+    }})
+        
+      
+
+
+    setTimeout(() => {
       let textData = document.getElementById("text-data");
       let btnEmitirNFSE = document.getElementById("enviardados-btn");
       let voltarBtn = document.getElementById("voltar-btn");
@@ -53,12 +89,22 @@ window.addEventListener('DOMContentLoaded', () => {
       // criei uma lógica para mostrar quais dados ja temos para a emissão da NFSE com base no cadastro do login
       if (textData && data.length > 0) {
       let emitente = data[0];
-      textData.value = `CNPJ DESTINATARIO: ${emitente.cnpjDest}\nDESCRICAO: ${emitente.descricao}\nVALOR TOTAL:\nCÓDIGO DE SERVIÇO: ${emitente.codServico}`;}
+      textData.value = 
+      `CNPJ DESTINATARIO: ${emitente.cnpjDest}
+      \nDESCRICAO: ${emitente.descricao}
+      \nVALOR TOTAL:
+      \nCÓDIGO DE SERVIÇO: ${emitente.codServico}
+      \nVALOR TOTAL:
+      \nCÓDIGO DE SERVIÇO NACIONAL: ${emitente.codServicoNac}
+      \nCÓDIGO DE SERVIÇO MUNICIPAL: ${emitente.codServicoMun} 
+      \nCompra Governamental?: ${emitente.compraGovernamental} 
+      \nDestinatário Adquirente: ${emitente.destinatarioAdquirente}` 
+      ;}
       // Atualiza quando mudar o select
       selectEmitentes.addEventListener("change", () => {
       let emitenteSelecionado = data.find(e => e.nome === selectEmitentes.value);
       if (emitenteSelecionado) {
-        textData.value = `CNPJ DESTINATARIO: ${emitenteSelecionado.cnpjDest}\nLOCAL DO SERVIÇO: ${emitenteSelecionado.localServico}\nDESCRICAO: ${emitenteSelecionado.descricao}\nVALOR TOTAL:\nCÓDIGO DE SERVIÇO NACIONAL: ${emitenteSelecionado.codServicoNac}\nCÓDIGO DE SERVIÇO MUNICIPAL: ${emitenteSelecionado.codServicoMun}`;
+        textData.value = `CNPJ DESTINATARIO: ${emitenteSelecionado.cnpjDest}\nLOCAL DO SERVIÇO: ${emitenteSelecionado.localServico}\nDESCRICAO: ${emitenteSelecionado.descricao}\nVALOR TOTAL:\nCÓDIGO DE SERVIÇO NACIONAL: ${emitenteSelecionado.codServicoNac}\nCÓDIGO DE SERVIÇO MUNICIPAL: ${emitenteSelecionado.codServicoMun}\nCompra Governamental?: ${emitenteSelecionado.compraGovernamental}\nDestinatário Adquirente: ${emitenteSelecionado.destinatarioAdquirente}`;
       }
     }); 
 
@@ -67,18 +113,25 @@ window.addEventListener('DOMContentLoaded', () => {
           const linhas = texto.trim().split('\n');
           const valores = linhas.map(linha => linha.match(/^.*?:\s*(.*)$/)[1]);
           const emitentes = document.getElementById("emitentes").value;
+          IBS = document.querySelector('.input-ibs')?.value || "";
+          CBS = document.querySelector('.input-cbs')?.value || "";
 
-          dadosNFSE = [{
+          dadosNFSE = {
             nomeEmitente: emitentes,
             cnpjDest: valores[0],
             localServico: valores[1],
             descricao: valores[2],
             valorTotal: valores[3],
             codServicoNac: valores[4],
-            codServicoMun: valores[5]
-      }]
+            codServicoMun: valores[5],
+            IBSeCBS: IBSeCBS,
+            //IBS: IBS,
+            //CBS: CBS,
+            compraGovernamental: valores[6],
+            destinatarioAdquirente: valores[7]
+            }
 
-        window.excelControl.emitirNFSE(dadosNFSE[0]);
+        window.excelControl.emitirNFSE(dadosNFSE);
         })
 
       voltarBtn.addEventListener('click', () => window.location.reload());

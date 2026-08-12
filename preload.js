@@ -1,7 +1,7 @@
 const { contextBridge } = require('electron');
 const fs = require('fs').promises;
 const XLSX = require('xlsx');
-const  puppeteer  = require('puppeteer');
+const puppeteer  = require('puppeteer');
 
 
 console.log('[PRELOAD] carregado');
@@ -45,6 +45,56 @@ console.log('[PRELOAD] carregado');
       }
     }, _selector);
   };
+
+
+async function waitModal(page){
+  await page.waitForFunction(() => {
+    const modal = document.querySelector('#modalLoading');
+  return modal && modal.style.display === 'none';
+});}
+  async function selectCodMun(_selector, { value, text } = {}, page) {
+  // 1. Espera o select ter opções
+  await page.waitForFunction((selector) => {
+    const select = document.querySelector(selector);
+    return select && select.options.length > 0;
+  }, {}, _selector);
+
+  // 2. Lógica de seleção
+  await page.evaluate((selector, value, text) => {
+    const select = document.querySelector(selector);
+    if (!select) return;
+
+    const options = Array.from(select.options);
+
+    let option = null;
+
+    // 🔥 REGRA 1: se só tiver uma opção
+    if (options.length === 1) {
+      option = options[0];
+    } 
+    // 🔥 REGRA 2: se tiver várias, tenta pelo value
+    else if (value) {
+      option = options.find(o => o.value === value);
+    } 
+    // 🔥 REGRA 3: fallback pelo texto
+    if (!option && text) {
+      option = options.find(o => o.text.includes(text));
+    }
+
+    // 🔥 aplica seleção
+    if (option) {
+      select.value = option.value;
+
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+
+      if (window.jQuery) {
+        window.jQuery(select).trigger("chosen:updated");
+      }
+    }
+  }, _selector, value, text);
+  await waitModal(page);
+}
+  
   async function ativarDropDown(selector, page, pesquisa, isCode){
 
     await page.waitForSelector(`${selector} + .select2`, );
@@ -104,7 +154,11 @@ console.log('[PRELOAD] carregado');
     // tratando dados.
     const data = await lerLoginNFSE();
     const result = await data.find(linha =>  linha.nome.trim() === dados.nomeEmitente.trim());
+    console.log(dados);
+    console.log("//////////RESULT////////");
     console.log(result);
+
+
 
     //iniciando navegador com puppeter
     const browser = await puppeteer.launch({
@@ -113,10 +167,11 @@ console.log('[PRELOAD] carregado');
     headless: false});
     const page = await browser.newPage();
       // 
-    page.setDefaultTimeout(60000);
+    page.setDefaultTimeout(30000);
     
     //abrindo navegador e definindo responsividade da tela.
     await page.goto('https://www.nfse.gov.br/EmissorNacional/Login?ReturnUrl=%2fEmissorNacional');
+    //await page.goto('https://www.producaorestrita.nfse.gov.br/EmissorNacional/');
     await page.setViewport({width: 1366, height: 768});
 
     //escolhendo seletores
@@ -129,7 +184,17 @@ console.log('[PRELOAD] carregado');
     // esperando botão aparecer para clicar
     const btnNovaNFSE = await page.waitForSelector('.btnAcesso');
     await btnNovaNFSE.click();
+
+    await page.waitForSelector("#pnlInfoIBSCBS");
+
+     // selecionar opção do IBS
+     if(dados.IBSeCBS){
+        await ativarBotao('.radio-options .radiobutton.inline input[name="PreencherInfoIBSCBS"][value="1"]', page);
+     } else{
+      await ativarBotao('.radio-options .radiobutton.inline input[name="PreencherInfoIBSCBS"][value="0"]', page);
+     }
     
+
     //formatando data para NFSE
     const hoje = new Date();
     const dia = String(hoje.getDate()).padStart(2, '0');
@@ -143,6 +208,18 @@ console.log('[PRELOAD] carregado');
     await page.locator("#DataCompetencia").fill(dataFormatada);
     await page.keyboard.press("Tab");
 
+     // verificar quando o cliente é simples ou não.
+      if(result.regimeApuracao == "SIMPLES"){
+        await page.evaluate(() => {
+        const option = document.querySelector('#SimplesNacional_RegimeApuracaoTributosSN option[value="1"]');
+        if (option) {
+          // Atribui a propriedade selected como true
+          option.selected = true;
+          // Dispara o evento de mudança, caso o formulário precise processar a escolha
+          option.parentElement.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });}
+
     // selecionando opção do destinatario
     await ativarBotao('.radio-options .radiobutton.inline input[id="Tomador_LocalDomicilio"][value="1"]', page);
 
@@ -152,6 +229,21 @@ console.log('[PRELOAD] carregado');
     //esperar o botão
     await page.waitForSelector('#btnAvancar');
 
+    if(dados.regimeApuracao != 'MEI'){
+      // é compra governamental?
+    if(dados.CompraGovernamental == "Sim"){
+        await ativarBotao('.radio-options .radiobutton.inline input[name="EhCompraGovernamental"][value="1"]', page);
+     } else{
+      await ativarBotao('.radio-options .radiobutton.inline input[name="EhCompraGovernamental"][value="0"]', page);
+     }
+     // destinatário é o próprio adquirente?
+    if(dados.destinatarioAdquirente){
+        await ativarBotao('.radio-options .radiobutton.inline input[name="DestinatarioEhOAdquirente"][value="1"]', page);
+     } else{
+      await ativarBotao('.radio-options .radiobutton.inline input[name="DestinatarioEhOAdquirente"][value="0"]', page);
+     }
+    }
+    
     // clicando botão avançar
     page.evaluate(() => {
       /* setTimeout dentro do evaluate porque ele funciona dentro do browser. se colocarmos do lado de fora, o timeout funciona no Node.Js, fznd o puppeteer pular */
@@ -165,30 +257,37 @@ console.log('[PRELOAD] carregado');
     // inserindo codigo do servico
     await ativarDropDown('#ServicoPrestado_CodigoTributacaoNacional', page,  dados.codServicoNac.toString() != '' ? dados.codServicoNac.toString() : result.codServicoNac, true );
 
-    // conferindo se existe codservicoNac
-    if(dados.codServicoMun.toString()){
-      await page.waitForSelector('#ServicoPrestado_CodigoComplementarMunicipal');
-      await page.evaluate((codigoTexto) => {
-      const select = document.querySelector('#ServicoPrestado_CodigoComplementarMunicipal');
-      const option = [...select.options].find(opt =>
-    opt.text.includes(codigoTexto)
-  );
-      if (!option) return;
-      select.value = option.value;
-      select.dispatchEvent(new Event('change', { bubbles: true }));
-}, dados.codServicoMun.toString());
-    }
-
-    // escolhendo a opção NÂO
-    await ativarBotao('#ServicoPrestado_HaExportacaoImunidadeNaoIncidencia', page);
+    await waitModal(page)
     
+    if(dados.IBSeCBS){
+      try {
+          // Tenta executar a seleção do código municipal
+           await selectCodMun("#ServicoPrestado_CodigoComplementarMunicipal", {value: dados.codServicoMun}, page);
+        } catch (error) {
+          // Se der qualquer erro/exceção aqui dentro, o bot cai neste bloco:
+          console.log("[Aviso] Erro ao selecionar o código municipal, mas continuando o fluxo...", error.message);
+        }
+      // escolhendo a opção NÂO
+      await ativarBotao('#ServicoPrestado_HaExportacaoImunidadeNaoIncidencia', page);
+
+      // nbs
+      await selectCodMun("#ServicoPrestado_CodigoNBS", {value: "113012000"}, page);
+      //CIO
+      await selectCodMun("#ServicoPrestado_CodigoIndOp", {value: "100401"}, page);
+      }
+
+
+      // escolhendo a opção NÂO
+      await ativarBotao('#ServicoPrestado_HaExportacaoImunidadeNaoIncidencia', page);
+      
+      
+
+     
     // escrevendo descrição
     await page.waitForSelector("#ServicoPrestado_Descricao");
     await page.type("#ServicoPrestado_Descricao", dados.descricao.toString() != '' ? dados.descricao.toString() : result.descricao);
 
-    
-   
-
+  
 
     //condicional para códigos de COI
     if(dados.codServico == "070201")
@@ -210,6 +309,68 @@ console.log('[PRELOAD] carregado');
     // inserindo valor total da NFSE
     await page.waitForSelector('#Valores_ValorServico');
     await page.locator('#Valores_ValorServico').fill(dados.valorTotal.toString());
+    await page.keyboard.press('Tab');
+
+
+
+    if(result.regimeApuracao == "LUCRO PRESUMIDO"){
+      await selectCodMun("#ISSQN_RegimeEspecial",{value: "6"}, page);
+      await selectCodMun("#TributacaoFederal_PISCofins_SituacaoTributaria" ,{value: "1"}, page);
+
+      // formatando valor total
+      await page.locator('#TributacaoFederal_PISCofins_BaseDeCalculo').fill(dados.valorTotal.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+      useGrouping: false
+      }));
+      await page.locator('#TributacaoFederal_PISCofins_AliquotaPIS').fill('0,65');
+      await page.locator('#TributacaoFederal_PISCofins_AliquotaCOFINS').fill('3,00');
+        
+      await selectCodMun("#TributacaoFederal_PISCofins_TipoRetencao" ,{value: "0"}, page);
+      await ativarBotao('.radio-options .radiobutton.inline input[id="ValorTributos_TipoValorTributos"][value="2"]', page);
+            
+    } else if(result.regimeApuracao == "SIMPLES"){
+      await ativarBotao('#ISSQN_HaRetencao[value="0"]', page);
+      await page.evaluate(() => {
+        const option = document.querySelector('#ISSQN_HaRetencao[value="0"]');
+        if (option) {
+          // Atribui a propriedade selected como true
+          option.checked = true;
+          // Dispara o evento de mudança, caso o formulário precise processar a escolha
+          option.parentElement.dispatchEvent(new Event('change', { bubbles: true }));
+        }});
+
+      await selectCodMun("#TributacaoFederal_PISCofins_SituacaoTributaria" ,{value: "0"}, page);
+      await selectCodMun("#TributacaoFederal_PISCofins_TipoRetencao" ,{value: "0"}, page)
+      await ativarBotao('.radio-options .radiobutton.inline input[id="ValorTributos_TipoValorTributos"][value="4"]', page);
+
+       await page.evaluate(() => {
+        const option = document.querySelector('#ValorTributos_TipoValorTributos[value="4"]');
+        if (option) {
+          // Atribui a propriedade selected como true
+          option.checked = true;
+          // Dispara o evento de mudança, caso o formulário precise processar a escolha
+          option.parentElement.dispatchEvent(new Event('change', { bubbles: true }));
+        }});
+
+      await ativarBotao('#pnlValorAliquotaSN', page);   
+      await page.type("#ValorTributos_AliquotaSN", result.aliquotaSimples.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+      useGrouping: false
+      }));
+    }
+
+    if(dados.IBSeCBS){
+      // ibs e cbs
+      await selectCodMun("#ValorTributos_CodigoSituacaoTributaria", {value: "000"}, page);
+      await waitModal(page);
+      await selectCodMun("#ValorTributos_CodigoClassificacaoTributaria", {value: "000001"}, page);
+      }
+      
+      await page.locator(".btn.btn-lg.btn-primary.direita.has-spin").click();  
+      await page.waitForSelector(".pnlCollapse.emissao-calculos");
+
 
     // avançando para confirmar dados
     botaoAvancar(page);
@@ -217,7 +378,7 @@ console.log('[PRELOAD] carregado');
     // confirmando emissaoNFSE
     // await page.waitForSelector("#btnProsseguir");
     // await page.locator("#btnProsseguir").click();
-}
+ }
 contextBridge.exposeInMainWorld('excelControl', {
   lerLoginNFSE,
   cadastrarLoginNFSE,

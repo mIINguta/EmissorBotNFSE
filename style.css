@@ -11,15 +11,32 @@
     width: 100vw;
     height: 100vh;
     background-color: darkgray;
+    margin: 5px;
+    gap: 5px;
 }
 .sec1, .sec2{
     display: flex;
-    justify-content: center;
     align-items: center;
-    flex-direction: column;
-    width: 100%;
-    height: 40%;  
+    flex-direction: row;
     gap: 10px;
+}
+.sec2{
+    align-items: left;
+    justify-content: left;
+}
+.sec-dados-nota{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 5px;
+}
+.sec-dados-imp{
+    display: flex;
+    flex-direction: column;
+    justify-content: right;
+    height: 100%;
 }
 .text-data{
     width: 40vw;
